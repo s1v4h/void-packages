@@ -1,0 +1,107 @@
+diff --git a/playerctl/playerctl-formatter.c b/playerctl/playerctl-formatter.c
+index 6a284b7..28c3bc7 100644
+--- a/playerctl/playerctl-formatter.c
++++ b/playerctl/playerctl-formatter.c
+@@ -892,6 +892,65 @@ struct template_function {
+     {INFIX_DIV, &infixfn_div},
+ };
+ 
++static gchar *xg_strescape(const gchar *source) {
++    size_t len;
++    const guchar *p;
++    gchar *dest;
++    gchar *q;
++
++    g_return_val_if_fail (source != NULL, NULL);
++
++    p = (guchar *) source;
++    if (!g_size_checked_mul (&len, strlen (source), 2) ||
++            !g_size_checked_add (&len, len, 1))
++    {
++        g_error ("%s: overflow allocating %" G_GSIZE_FORMAT "*2+1 bytes",
++                G_STRLOC, strlen (source));
++    }
++    q = dest = g_malloc (len);
++
++    while (*p)
++    {
++        switch (*p)
++        {
++            case '\b':
++                *q++ = '\\';
++                *q++ = 'b';
++                break;
++            case '\f':
++                *q++ = '\\';
++                *q++ = 'f';
++                break;
++            case '\n':
++                *q++ = '\\';
++                *q++ = 'n';
++                break;
++            case '\r':
++                *q++ = '\\';
++                *q++ = 'r';
++                break;
++            case '\t':
++                *q++ = '\\';
++                *q++ = 't';
++                break;
++            case '\v':
++                *q++ = '\\';
++                *q++ = 'v';
++                break;
++            case '\\':
++                *q++ = '\\';
++                *q++ = '\\';
++                break;
++            default:
++                *q++ = *p;
++                break;
++        }
++        p++;
++    }
++    *q = 0;
++    return dest;
++}
++
+ static GVariant *expand_token(struct token *token, GVariantDict *context, GError **error) {
+     GError *tmp_error = NULL;
+ 
+@@ -904,7 +967,35 @@ static GVariant *expand_token(struct token *token, GVariantDict *context, GError
+ 
+     case TOKEN_VARIABLE:
+         if (g_variant_dict_contains(context, token->data)) {
+-            return g_variant_dict_lookup_value(context, token->data, NULL);
++            GVariant *v = g_variant_dict_lookup_value(context, token->data, NULL);
++            if (!v)
++                return NULL;
++
++            if (g_variant_is_of_type(v, G_VARIANT_TYPE_STRING)) {
++                const gchar *s = g_variant_get_string(v, NULL);
++                const gchar *esc = xg_strescape(s);
++                const GVariant *o = g_variant_new_string(esc);
++
++                g_free(esc);
++                g_variant_unref(v);
++                return o;
++            } else if (g_variant_is_of_type(v, G_VARIANT_TYPE_STRING_ARRAY)) {
++                gsize n;
++                const gchar **as = g_variant_get_strv(v, &n);
++                gchar **esc = g_new(gchar *, n);
++
++                for (gsize i = 0; i < n; i++)
++                    esc[i] = xg_strescape(as[i]);
++
++                const GVariant *o = g_variant_new_strv((const gchar * const *)esc, n);
++
++                g_free(esc);
++                g_free(as);
++                g_variant_unref(v);
++                return o;
++            } else {
++                return v;
++            }
+         } else {
+             return NULL;
+         }

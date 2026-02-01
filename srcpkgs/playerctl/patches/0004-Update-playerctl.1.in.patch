@@ -1,0 +1,26 @@
+From f79307d31c77e087c1facc5899c23835a26b7e14 Mon Sep 17 00:00:00 2001
+From: Cyril Li <76818434+CyrilSLi@users.noreply.github.com>
+Date: Sun, 8 Jun 2025 17:37:47 -0500
+Subject: [PATCH 4/5] Update playerctl.1.in
+
+---
+ doc/playerctl.1.in | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/doc/playerctl.1.in b/doc/playerctl.1.in
+index 31d60dc..bb36eea 100644
+--- a/doc/playerctl.1.in
++++ b/doc/playerctl.1.in
+@@ -183,6 +183,9 @@ Each command has access to the following variables:
+ .Bl -tag -width Ds
+ .It Va playerName
+ The name of the current player.
++.It Va playerInstance
++The name and instance of the current player,
++in playerName.instance1234 format.
+ .It Va position
+ The time position of the current track,
+ in microseconds.
+-- 
+2.51.2
+

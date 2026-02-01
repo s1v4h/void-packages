@@ -1,0 +1,26 @@
+From e9de134310437138e77ac9dcfb6ab9bac95bd061 Mon Sep 17 00:00:00 2001
+From: 5061726b6572 <54562474+5061726b6572@users.noreply.github.com>
+Date: Fri, 21 Feb 2025 21:07:12 -0700
+Subject: [PATCH 3/5] fix: Checks if message body is NULL before getting number
+ of children.
+
+---
+ playerctl/playerctl-daemon.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/playerctl/playerctl-daemon.c b/playerctl/playerctl-daemon.c
+index 1d9550c..92bd404 100644
+--- a/playerctl/playerctl-daemon.c
++++ b/playerctl/playerctl-daemon.c
+@@ -738,7 +738,7 @@ static void proxy_method_call_async_callback(GObject *source_object, GAsyncResul
+         g_dbus_method_invocation_return_value(invocation, body);
+         break;
+     case G_DBUS_MESSAGE_TYPE_ERROR: {
+-        if (g_variant_n_children(body) > 1) {
++        if (body != NULL && g_variant_n_children(body) > 1) {
+             GVariant *error_message_variant = g_variant_get_child_value(body, 1);
+             const char *error_message = g_variant_get_string(error_message_variant, 0);
+             g_dbus_method_invocation_return_dbus_error(
+-- 
+2.51.2
+

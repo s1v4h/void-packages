@@ -1,0 +1,36 @@
+diff --git a/mpris.c b/mpris.c
+index 31c3a8d..07a8640 100644
+--- a/mpris.c
++++ b/mpris.c
+@@ -5,7 +5,7 @@
+ #include <inttypes.h>
+ #include <string.h>
+ 
+-
++enum { OPENURI_REPLY = 1 };
+ 
+ static const char *introspection_xml =
+     "<node>\n"
+@@ -658,8 +658,8 @@ static void method_call_player(G_GNUC_UNUSED GDBusConnection *connection,
+     } else if (g_strcmp0(method_name, "OpenUri") == 0) {
+         char *uri;
+         g_variant_get(parameters, "(&s)", &uri);
+-        const char *cmd[] = {"loadfile", uri, NULL};
+-        mpv_command_async(ud->mpv, 0, cmd);
++        const char *cmd[] = {"loadfile", uri, "insert-next", NULL};
++        mpv_command_async(ud->mpv, OPENURI_REPLY, cmd);
+         g_dbus_method_invocation_return_value(invocation, NULL);
+ 
+     } else {
+@@ -1149,6 +1149,11 @@ static gboolean event_handler(int fd, G_GNUC_UNUSED GIOCondition condition, gpoi
+                 ud->seek_expected = FALSE;
+             }
+          } break;
++        case MPV_EVENT_COMMAND_REPLY:
++            if (event->error >= 0 && event->reply_userdata == OPENURI_REPLY) {
++                const char *cmd[] = {"playlist-next", NULL};
++                mpv_command_async(ud->mpv, 0, cmd);
++            }
+         default:
+             break;
+         }

@@ -1,0 +1,13 @@
+--- a/yt_dlp/YoutubeDL.py
++++ b/yt_dlp/YoutubeDL.py
+@@ -1899,6 +1899,10 @@
+             self.add_extra_info(ie_result, {
+                 'extractor': ie.IE_NAME,
+                 'extractor_key': ie.ie_key(),
++                'archive_id': self._make_archive_id({
++                    'id': ie_result.get('id'),
++                    'extractor_key': ie.IE_NAME,
++                }),
+             })
+ 
+     def process_ie_result(self, ie_result, download=True, extra_info=None):
